@@ -1,0 +1,7 @@
+# ninja log v7
+21	106	7885981526193601	CMakeFiles/chess_gui.dir/src/Game.cpp.obj	aa2c59032dab9805
+26	121	7885981526351140	CMakeFiles/chess_gui.dir/src/Move.cpp.obj	2e41f3eeb5f81cc0
+12	770	7885981526193601	CMakeFiles/chess_gui.dir/src/Board.cpp.obj	afc078e9eed0aa71
+6	1708	7885981526035735	CMakeFiles/chess_gui.dir/src/main.cpp.obj	69396afadd1ebca4
+1709	2016	7885981543141830	chess_gui.exe	141aec21a0b87642
+45	486	7885992667412259	chess_gui.exe	e2ed252abd22976f
