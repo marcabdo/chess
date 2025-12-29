@@ -23,6 +23,8 @@ public:
     uint64_t perft(int depth);
     uint64_t perftDivide(int depth);
     std::string moveToString(const Move& m);
+    bool isCheckmate(Color side) const;
+    bool isStalemate(Color side) const;
 
 
 private:

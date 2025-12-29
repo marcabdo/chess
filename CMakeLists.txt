@@ -44,4 +44,11 @@ add_custom_command(
             $<TARGET_FILE_DIR:chess_gui>
 )
 
-
+if (WIN32)
+    add_custom_command(TARGET chess_gui POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_RUNTIME_DLLS:chess_gui>
+            $<TARGET_FILE_DIR:chess_gui>
+        COMMAND_EXPAND_LISTS
+    )
+endif()

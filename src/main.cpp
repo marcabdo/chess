@@ -14,6 +14,13 @@ enum class GameMode {
     COMPUTER
 };
 
+enum class EndState {
+    NONE,
+    WHITE_WIN,
+    BLACK_WIN,
+    STALEMATE
+};
+
 GameMode runMenu();
 void runGameVsFriend();
 void runUnderDevelopmentWindow();
@@ -184,13 +191,18 @@ void drawPieces(sf::RenderWindow& window,
 
 
 int main() {
-    GameMode mode = runMenu();
+    while (true) {
+        GameMode mode = runMenu();
 
-    if (mode == GameMode::FRIEND) {
-        runGameVsFriend();
-    }
-    else if (mode == GameMode::COMPUTER) {
-        runUnderDevelopmentWindow();
+        if (mode == GameMode::FRIEND) {
+            runGameVsFriend();
+        }
+        else if (mode == GameMode::COMPUTER) {
+            runUnderDevelopmentWindow();
+        }
+        else {
+            break; // exit program
+        }
     }
 
     return 0;
@@ -316,6 +328,8 @@ void runGameVsFriend() {
     int selectedSquare = -1;
     Color sideToMove = Color::WHITE;
 
+    EndState endState = EndState::NONE;
+
     std::vector<Move> selectedMoves;
 
     // ================= BOARD =================
@@ -357,50 +371,107 @@ void runGameVsFriend() {
             if (event->is<sf::Event::Closed>()) {
                 window.close();
             }
+            
+            // --- POPUP BUTTON HANDLING ---
+            if (endState != EndState::NONE) {
+                if (const auto* mouse =
+                        event->getIf<sf::Event::MouseButtonReleased>()) {
 
-            if (const auto* mouse =
-                    event->getIf<sf::Event::MouseButtonPressed>()) {
+                    if (mouse->button == sf::Mouse::Button::Left) {
+                        sf::Vector2f mp(sf::Mouse::getPosition(window));
 
-                if (mouse->button == sf::Mouse::Button::Left) {
+                        // Recreate popup geometry (same as render)
+                        sf::RectangleShape popup({500.f, 300.f});
+                        popup.setPosition({
+                            winSize.x / 2.f - 250.f,
+                            winSize.y / 2.f - 150.f
+                        });
 
-                    sf::Vector2i mousePos = sf::Mouse::getPosition(window);
-                    int clickedSquare = pixelToSquare(mousePos);
-                    if (clickedSquare == -1) continue;
+                        sf::RectangleShape playAgainBtn({180.f, 50.f});
+                        sf::RectangleShape homeBtn({180.f, 50.f});
 
-                    Piece clickedPiece = board.getPiece(clickedSquare);
+                        playAgainBtn.setPosition({
+                            popup.getPosition().x + 60.f,
+                            popup.getPosition().y + 180.f
+                        });
 
-                    // ---- SELECT ----
-                    if (selectedSquare == -1) {
-                        if (clickedPiece.type != PieceType::NONE &&
-                            clickedPiece.color == sideToMove) {
+                        homeBtn.setPosition({
+                            popup.getPosition().x + 260.f,
+                            popup.getPosition().y + 180.f
+                        });
 
-                            selectedSquare = clickedSquare;
-
+                        if (playAgainBtn.getGlobalBounds().contains(mp)) {
+                            board = Board();
+                            sideToMove = Color::WHITE;
+                            selectedSquare = -1;
                             selectedMoves.clear();
-                            auto legal = board.legalMoves(sideToMove);
-                            for (const auto& m : legal) {
-                                if (m.from == selectedSquare) {
-                                    selectedMoves.push_back(m);
+                            endState = EndState::NONE;
+                        }
+
+                        if (homeBtn.getGlobalBounds().contains(mp)) {
+                            window.close();
+                            return; // back to main()
+                        }
+                    }
+                }
+
+                continue; // IMPORTANT: block board input while popup is open
+            }
+
+            if (endState == EndState::NONE) {
+                if (const auto* mouse =
+                        event->getIf<sf::Event::MouseButtonPressed>()) {
+
+                    if (mouse->button == sf::Mouse::Button::Left) {
+
+                        sf::Vector2i mousePos = sf::Mouse::getPosition(window);
+                        int clickedSquare = pixelToSquare(mousePos);
+                        if (clickedSquare == -1) continue;
+
+                        Piece clickedPiece = board.getPiece(clickedSquare);
+
+                        // ---- SELECT ----
+                        if (selectedSquare == -1) {
+                            if (clickedPiece.type != PieceType::NONE &&
+                                clickedPiece.color == sideToMove) {
+
+                                selectedSquare = clickedSquare;
+
+                                selectedMoves.clear();
+                                auto legal = board.legalMoves(sideToMove);
+                                for (const auto& m : legal) {
+                                    if (m.from == selectedSquare) {
+                                        selectedMoves.push_back(m);
+                                    }
                                 }
                             }
                         }
-                    }
-                    // ---- MOVE ----
-                    else {
-                        for (auto& m : selectedMoves) {   // <-- REMOVE const
-                            if (m.to == clickedSquare) {
-                                board.makeMove(m);
-                                sideToMove =
-                                    (sideToMove == Color::WHITE)
-                                    ? Color::BLACK
-                                    : Color::WHITE;
-                                break;
+                        // ---- MOVE ----
+                        else {
+                            for (auto& m : selectedMoves) {   // <-- REMOVE const
+                                if (m.to == clickedSquare) {
+                                    board.makeMove(m);
+                                    sideToMove =
+                                        (sideToMove == Color::WHITE)
+                                        ? Color::BLACK
+                                        : Color::WHITE;
+
+                                    if (board.isCheckmate(sideToMove)) {
+                                        endState = (sideToMove == Color::WHITE)
+                                            ? EndState::BLACK_WIN
+                                            : EndState::WHITE_WIN;
+                                    }
+                                    else if (board.isStalemate(sideToMove)) {
+                                        endState = EndState::STALEMATE;
+                                    }
+                                    break;
+                                }
                             }
+
+
+                            selectedSquare = -1;
+                            selectedMoves.clear();
                         }
-
-
-                        selectedSquare = -1;
-                        selectedMoves.clear();
                     }
                 }
             }
@@ -453,6 +524,79 @@ void runGameVsFriend() {
 
             sprite.setPosition(squareToPixel(sq));
             window.draw(sprite);
+        }
+
+        if (endState != EndState::NONE) {
+            // --- Dark overlay ---
+            sf::RectangleShape overlay(
+                sf::Vector2f(winSize.x, winSize.y)
+            );
+            overlay.setFillColor(sf::Color(0, 0, 0, 150));
+            window.draw(overlay);
+
+            // --- Popup box ---
+            sf::RectangleShape popup({500.f, 300.f});
+            popup.setFillColor(sf::Color::White);
+            popup.setPosition({
+                winSize.x / 2.f - 250.f,
+                winSize.y / 2.f - 150.f
+            });
+            window.draw(popup);
+
+            // --- Text ---
+            sf::Font font;
+            if (!font.openFromFile("fonts/font.ttf")) {
+                std::cerr << "Failed to load font\n";
+            }
+
+            sf::Text msg(font, "", 36);
+            msg.setFillColor(sf::Color::Black);
+
+            if (endState == EndState::WHITE_WIN)
+                msg.setString("White wins!");
+            else if (endState == EndState::BLACK_WIN)
+                msg.setString("Black wins!");
+            else
+                msg.setString("Stalemate!");
+
+            msg.setPosition({
+                popup.getPosition().x + 130.f,
+                popup.getPosition().y + 40.f
+            });
+
+            window.draw(msg);
+
+            // --- Buttons ---
+            sf::RectangleShape playAgainBtn({180.f, 50.f});
+            sf::RectangleShape homeBtn({180.f, 50.f});
+
+            playAgainBtn.setPosition({
+                popup.getPosition().x + 60.f,
+                popup.getPosition().y + 180.f
+            });
+
+            homeBtn.setPosition({
+                popup.getPosition().x + 260.f,
+                popup.getPosition().y + 180.f
+            });
+
+            playAgainBtn.setFillColor(sf::Color(200, 200, 200));
+            homeBtn.setFillColor(sf::Color(200, 200, 200));
+
+            window.draw(playAgainBtn);
+            window.draw(homeBtn);
+
+            sf::Text playText(font, "Play Again", 20);
+            sf::Text homeText(font, "Home Screen", 20);
+
+            playText.setPosition(playAgainBtn.getPosition() + sf::Vector2f(20, 10));
+            homeText.setPosition(homeBtn.getPosition() + sf::Vector2f(20, 10));
+
+            window.draw(playText);
+            window.draw(homeText);
+
+            // --- Handle button clicks ---
+            
         }
 
         window.display();

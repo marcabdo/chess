@@ -875,3 +875,24 @@ std::string Board::moveToString(const Move& m) {
     return s;
 }
 
+
+bool Board::isCheckmate(Color side) const {
+    if (!kingInCheck(side))
+        return false;
+
+    Board tempBoard = *this;
+    auto moves = tempBoard.legalMoves(side);
+
+    return moves.empty();
+}
+
+
+bool Board::isStalemate(Color side) const {
+    if (kingInCheck(side))
+        return false;
+
+    Board tempBoard = *this;
+    auto moves = tempBoard.legalMoves(side);
+
+    return moves.empty();
+}
