@@ -326,7 +326,6 @@ void runGameVsFriend() {
 
     Board board;
     int selectedSquare = -1;
-    Color sideToMove = Color::WHITE;
 
     EndState endState = EndState::NONE;
 
@@ -371,7 +370,34 @@ void runGameVsFriend() {
             if (event->is<sf::Event::Closed>()) {
                 window.close();
             }
-            
+        // ---------- UNDO / REDO ----------
+        if (event->is<sf::Event::KeyPressed>()) {
+            auto key = event->getIf<sf::Event::KeyPressed>()->code;
+
+            if (key == sf::Keyboard::Key::Left && board.canUndo()) {
+                board.undoLastMove();
+
+                selectedSquare = -1;
+                selectedMoves.clear();
+                endState = EndState::NONE;
+            }
+            else if (key == sf::Keyboard::Key::Right && board.canRedo()) {
+                board.redoLastMove();
+
+                selectedSquare = -1;
+                selectedMoves.clear();
+                endState = EndState::NONE;
+            }
+        }
+
+        // ---------- MOUSE INPUT ----------
+        if (endState == EndState::NONE) {
+            if (const auto* mouse =
+                    event->getIf<sf::Event::MouseButtonPressed>()) {
+
+                // your existing mouse move code
+            }
+        }
             // --- POPUP BUTTON HANDLING ---
             if (endState != EndState::NONE) {
                 if (const auto* mouse =
@@ -402,7 +428,7 @@ void runGameVsFriend() {
 
                         if (playAgainBtn.getGlobalBounds().contains(mp)) {
                             board = Board();
-                            sideToMove = Color::WHITE;
+    
                             selectedSquare = -1;
                             selectedMoves.clear();
                             endState = EndState::NONE;
@@ -433,12 +459,12 @@ void runGameVsFriend() {
                         // ---- SELECT ----
                         if (selectedSquare == -1) {
                             if (clickedPiece.type != PieceType::NONE &&
-                                clickedPiece.color == sideToMove) {
+                                clickedPiece.color == board.getSideToMove()) {
 
                                 selectedSquare = clickedSquare;
 
                                 selectedMoves.clear();
-                                auto legal = board.legalMoves(sideToMove);
+                                auto legal = board.legalMoves(board.getSideToMove());
                                 for (const auto& m : legal) {
                                     if (m.from == selectedSquare) {
                                         selectedMoves.push_back(m);
@@ -451,17 +477,13 @@ void runGameVsFriend() {
                             for (auto& m : selectedMoves) {   // <-- REMOVE const
                                 if (m.to == clickedSquare) {
                                     board.makeMove(m);
-                                    sideToMove =
-                                        (sideToMove == Color::WHITE)
-                                        ? Color::BLACK
-                                        : Color::WHITE;
 
-                                    if (board.isCheckmate(sideToMove)) {
-                                        endState = (sideToMove == Color::WHITE)
+                                    if (board.isCheckmate(board.getSideToMove())) {
+                                        endState = (board.getSideToMove() == Color::WHITE)
                                             ? EndState::BLACK_WIN
                                             : EndState::WHITE_WIN;
                                     }
-                                    else if (board.isStalemate(sideToMove)) {
+                                    else if (board.isStalemate(board.getSideToMove())) {
                                         endState = EndState::STALEMATE;
                                     }
                                     break;

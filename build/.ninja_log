@@ -1,8 +1,9 @@
 # ninja log v7
-52	148	7886009806266207	CMakeFiles/chess_gui.dir/src/Game.cpp.obj	aa2c59032dab9805
-57	150	7886009806423950	CMakeFiles/chess_gui.dir/src/Move.cpp.obj	2e41f3eeb5f81cc0
-31	389	7887391205754886	CMakeFiles/chess_gui.dir/src/Board.cpp.obj	afc078e9eed0aa71
-28	802	7887396201417269	CMakeFiles/chess_gui.dir/src/main.cpp.obj	69396afadd1ebca4
-803	997	7887396209258891	chess_gui.exe	6561816e1e563d98
-28	6553	7887405135142732	CMakeFiles/chess_gui.dir/src/main.cpp.obj	69396afadd1ebca4
-6554	7878	7887405200472522	chess_gui.exe	6561816e1e563d98
+17	55	7887422989055986	CMakeFiles/chess_gui.dir/src/Game.cpp.obj	aa2c59032dab9805
+19	56	7887422989075996	CMakeFiles/chess_gui.dir/src/Move.cpp.obj	2e41f3eeb5f81cc0
+11	357	7887431660957788	CMakeFiles/chess_gui.dir/src/Board.cpp.obj	afc078e9eed0aa71
+11	804	7887436170085980	CMakeFiles/chess_gui.dir/src/main.cpp.obj	69396afadd1ebca4
+805	1013	7887436178009516	chess_gui.exe	6561816e1e563d98
+14	355	7887440717390744	CMakeFiles/chess_gui.dir/src/Board.cpp.obj	afc078e9eed0aa71
+11	813	7887440717390744	CMakeFiles/chess_gui.dir/src/main.cpp.obj	69396afadd1ebca4
+813	1005	7887440725413314	chess_gui.exe	6561816e1e563d98

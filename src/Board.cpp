@@ -642,7 +642,7 @@ std::vector<Move> Board::legalMoves(Color side) {
 
 
 
-void Board::makeMove(Move m) {
+void Board::applyMove(Move m) {
     Piece movingPiece = getPiece(m.from);
     Piece empty = { Color::WHITE, PieceType::NONE };
 
@@ -657,6 +657,8 @@ void Board::makeMove(Move m) {
     m.prevLastMoveFrom = lastMoveFrom;
     m.prevLastMoveTo = lastMoveTo;
     m.prevLastMovePiece = lastMovePiece;
+
+    
 
     // --- Update castling rights based on moving piece ---
     if (movingPiece.type == PieceType::KING) {
@@ -752,6 +754,12 @@ void Board::makeMove(Move m) {
 }
 
 
+void Board::makeMove(Move m) {
+    futureMoves.clear();
+    applyMove(m);
+    pastMoves.push_back(m);
+}
+
 
 void Board::undoMove(const Move& m) {
     Piece empty = { Color::WHITE, PieceType::NONE };
@@ -768,6 +776,7 @@ void Board::undoMove(const Move& m) {
     whiteQueensideRookMoved = m.prevWhiteQSrookMoved;
     blackKingsideRookMoved = m.prevBlackKSrookMoved;
     blackQueensideRookMoved = m.prevBlackQSrookMoved;
+
 
     // --- Undo special moves ---
     if (m.castling) {
@@ -895,4 +904,35 @@ bool Board::isStalemate(Color side) const {
     auto moves = tempBoard.legalMoves(side);
 
     return moves.empty();
+}
+
+
+void Board::undoLastMove() {
+    if (pastMoves.empty())
+        return;
+
+    Move m = pastMoves.back();
+    pastMoves.pop_back();
+
+    undoMove(m);
+    futureMoves.push_back(m);
+}
+
+bool Board::canUndo() const {
+    return !pastMoves.empty();
+}
+
+void Board::redoLastMove() {
+    if (futureMoves.empty())
+        return;
+
+    Move m = futureMoves.back();
+    futureMoves.pop_back();
+
+    applyMove(m);
+    pastMoves.push_back(m);
+}
+
+bool Board::canRedo() const {
+    return !futureMoves.empty();
 }

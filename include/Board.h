@@ -19,13 +19,20 @@ public:
     bool kingInCheck(Color side) const;
     std::vector<Move> legalMoves(Color side);
     void makeMove(Move m);
+    void applyMove(Move m);
     void undoMove(const Move& m);
     uint64_t perft(int depth);
     uint64_t perftDivide(int depth);
     std::string moveToString(const Move& m);
     bool isCheckmate(Color side) const;
     bool isStalemate(Color side) const;
+    Color getSideToMove() const { return sideToMove; }
 
+    void undoLastMove();
+    void redoLastMove();
+
+    bool canUndo() const;
+    bool canRedo() const;
 
 private:
 
@@ -50,4 +57,7 @@ private:
     bool blackQueensideRookMoved = false;
 
     Color sideToMove;
+
+    std::vector<Move> pastMoves;   // undo stack
+    std::vector<Move> futureMoves;
 };
